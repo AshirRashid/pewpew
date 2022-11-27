@@ -1,17 +1,17 @@
-from weapons import Weapon
-from time import sleep
+from random import randint
 
 class Entity:
 
-    def __init__(self, pos, radius=10):
+    def __init__(self, pos, projectiles_arr, radius=10, direction=PVector(1, 0)):
         self.pos = pos
         self.radius = radius
         self.health = 10
         self.speed = 10
         self.vel = PVector(0, 0)
-        self.direction = PVector(20, 20)
+        self.direction = direction
+        self.prev_non_zero_direction = direction
         self.friction = 0.85
-        self.weapon = Weapon()
+        self.projectiles_arr = projectiles_arr
 
     def check_collision(self, other_colliding_obj):
         return (
@@ -20,19 +20,42 @@ class Entity:
             )
 
     def process(self):
-        raise NotImplementedError()
-    
+        if self.direction.magSq() == 0:
+            self.vel *= self.friction
+            if self.vel.magSq() < 1:
+                self.vel.set(0, 0)
+        else:
+            self.prev_non_zero_direction = self.direction
+            self.vel = self.speed * self.direction
+        self.pos += self.vel
+
     def draw(self):
         raise NotImplementedError()
     
     def on_collision(self, other_colliding_obj):
         raise NotImplementedError()
 
+    def shoot(self, projectile_direction=None):
+        projectile_radius = 2
+        projectile_pos = self.pos + (self.radius + projectile_radius + 5) * self.prev_non_zero_direction
+        print(frameCount, self.prev_non_zero_direction)
+        Projectile(
+            projectile_pos,
+            self.projectiles_arr,
+            self,
+            # PVector(
+            # projectile_direction.x + randint(-50, 50)/100,
+            # projectile_direction.y + randint(-50, 50)/100
+            # ),
+            self.prev_non_zero_direction,
+            radius=projectile_radius
+        )
+
 
 class Player(Entity):
     
-    def __init__(self, pos):
-        Entity.__init__(self, pos)
+    def __init__(self, pos, projectiles_arr):
+        Entity.__init__(self, pos, projectiles_arr, radius=25)
         self.frozen = False
         self.knock_back_speed = 30
         self.frozen_friction = 0.65
@@ -52,8 +75,10 @@ class Player(Entity):
                 self.direction.y -= 1
             elif input_keyCode == DOWN:
                 self.direction.y += 1
+            elif input_keyCode == 32: # 32 = ASCII code for space
+                self.shoot(self.prev_non_zero_direction)
         self.direction.normalize()
-    
+
     def on_collision(self, other_colliding_obj):
         if isinstance(other_colliding_obj, Enemy):
             self.vel = (self.pos - other_colliding_obj.pos).normalize()*self.knock_back_speed
@@ -62,7 +87,10 @@ class Player(Entity):
         #     pass
 
     def process(self):
-        if self.frozen or self.direction.magSq() == 0:
+        is_dir_0 = self.direction.magSq() == 0
+        if not is_dir_0:
+            self.prev_non_zero_direction = self.direction
+        if self.frozen or is_dir_0:
             self.vel *= self.friction if not self.frozen else self.frozen_friction
             if self.vel.magSq() < 1:
                 self.frozen = False
@@ -80,6 +108,24 @@ class Enemy(Entity):
 
     def on_collision(self, other_colliding_obj):
         pass
-    
+
+
+class Projectile(Entity):
+
+    def __init__(self, pos, projectile_arr, parent, direction, radius=8):
+        Entity.__init__(self, pos, projectile_arr, radius=8, direction=direction)
+        self.damage = 10
+        self.parent = parent
+        self.speed = 15
+        self.projectile_arr = projectile_arr
+        self.projectile_arr.append(self)
+
+    def on_collision(self, other_colliding_obj):
+        self.projectile_arr.remove(self)
+
+    def draw(self):
+        fill(0, 255, 0)
+        circle(self.pos.x, self.pos.y, self.radius*2)
+
     def process(self):
-        pass
+        Entity.process(self)
