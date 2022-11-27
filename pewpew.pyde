@@ -1,8 +1,8 @@
 from os import getcwd
 from random import randint
 
-from game import Game
 import game_singleton
+from game import Game
 
 path = getcwd()
 game_singleton.game = Game()

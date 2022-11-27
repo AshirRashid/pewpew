@@ -1,4 +1,6 @@
 from entities import Enemy, Player
+from time import time
+from copy import copy
 
 
 class Game:
@@ -8,17 +10,20 @@ class Game:
         self.TILE_NUM = PVector(20, 20)
         self.TILE_RES = PVector(self.RES.x//self.TILE_NUM.x, self.RES.y//self.TILE_NUM.y)
 
-        self.signals = dict()
+        self.timer_manager = TimerManager()
         self.pressed_keys = set()
         self.start, self.end = PVector(10, 10), PVector(self.RES.x - 10, self.RES.y - 10) # map boundary
         self.projectiles = []
         self.player = Player(PVector(self.RES.x/2, self.RES.y/2))
         self.entities = [
-            # Enemy(PVector(100, 100), self.projectiles, 50),
-            # Enemy(PVector(200, 200), self.projectiles, 50)
+            Enemy(PVector(100, 100), 30),
+            Enemy(PVector(200, 200), 30)
         ] # all non-player entities
 
+        Enemy(PVector(200, 200), 30)
+
     def process(self):
+        self.timer_manager.process_timers()
         self.player.process_input(self.pressed_keys)
         self.player.process()
 
@@ -39,13 +44,6 @@ class Game:
         for projectile in self.projectiles:
             projectile.draw()
 
-    def connect_to_signal(self, signal_name, callback):
-        self.signals[signal_name] = self.signals.get(signal_name, []) + [ callback ]
-
-    def emit_signal(self, signal_name, emitter):
-        for callback in self.signals[signal_name]:
-            callback(emitter)
-
     def spawn_obj_by_class(self, obj_type):
         """Simple object factory"""
         if obj_type == "player":
@@ -57,3 +55,26 @@ class Game:
         else:
             raise NotImplementedError()
         return new_obj
+
+    def create_timer(self, time_in_s, callback):
+        self.timer_manager.add_timer(time_in_s, callback)
+
+
+class TimerManager:
+
+    def __init__(self):
+        self.timers = []
+
+    def add_timer(self, time_in_s, callback):
+        self.timers.append((
+            time(),
+            time_in_s,
+            callback
+        ))
+
+    def process_timers(self):
+        for timer in copy(self.timers):
+            start_time, time_in_s, callback = timer
+            if time() > start_time + time_in_s:
+                self.timers.remove(timer)
+                callback()

@@ -1,5 +1,8 @@
+from math import pi
 from random import randint
+
 import game_singleton
+
 
 class Entity:
 
@@ -37,16 +40,11 @@ class Entity:
 
     def shoot(self, projectile_direction=None):
         projectile_radius = 2
-        projectile_pos = self.pos + (self.radius + projectile_radius + 5) * self.prev_non_zero_direction
-        print(frameCount, self.prev_non_zero_direction)
+        projectile_pos = self.pos + (self.radius + projectile_radius) * self.prev_non_zero_direction
         Projectile(
             projectile_pos,
             self,
-            # PVector(
-            # projectile_direction.x + randint(-50, 50)/100,
-            # projectile_direction.y + randint(-50, 50)/100
-            # ),
-            self.prev_non_zero_direction,
+            self.prev_non_zero_direction.copy().rotate(randint(-20, 20)/100.0),
             radius=projectile_radius
         )
 
@@ -56,6 +54,7 @@ class Player(Entity):
     def __init__(self, pos):
         Entity.__init__(self, pos, radius=25)
         self.frozen = False
+        self.is_ready_to_shoot = True
         self.knock_back_speed = 30
         self.frozen_friction = 0.65
 
@@ -82,8 +81,14 @@ class Player(Entity):
         if isinstance(other_colliding_obj, Enemy):
             self.vel = (self.pos - other_colliding_obj.pos).normalize()*self.knock_back_speed
             self.frozen = True
-        # elif other_colliding_obj is Pickup:
-        #     pass
+
+    def shoot(self, projectile_direction=None):
+        if self.is_ready_to_shoot:
+            Entity.shoot(self, projectile_direction)
+            self.is_ready_to_shoot = False
+            def __():
+                self.is_ready_to_shoot = True
+            game_singleton.game.create_timer(0.1, __)
 
     def process(self):
         is_dir_0 = self.direction.magSq() == 0
@@ -127,3 +132,10 @@ class Projectile(Entity):
 
     def process(self):
         Entity.process(self)
+        if (
+                self.pos.x < 0
+                or self.pos.x > game_singleton.game.RES.x
+                or self.pos.y < 0
+                or self.pos.y > game_singleton.game.RES.y
+        ):
+            game_singleton.game.projectiles.remove(self)
