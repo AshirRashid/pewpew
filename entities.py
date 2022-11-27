@@ -1,8 +1,9 @@
 from random import randint
+import game_singleton
 
 class Entity:
 
-    def __init__(self, pos, projectiles_arr, radius=10, direction=PVector(1, 0)):
+    def __init__(self, pos, radius=10, direction=PVector(1, 0)):
         self.pos = pos
         self.radius = radius
         self.health = 10
@@ -11,7 +12,6 @@ class Entity:
         self.direction = direction
         self.prev_non_zero_direction = direction
         self.friction = 0.85
-        self.projectiles_arr = projectiles_arr
 
     def check_collision(self, other_colliding_obj):
         return (
@@ -41,7 +41,6 @@ class Entity:
         print(frameCount, self.prev_non_zero_direction)
         Projectile(
             projectile_pos,
-            self.projectiles_arr,
             self,
             # PVector(
             # projectile_direction.x + randint(-50, 50)/100,
@@ -54,8 +53,8 @@ class Entity:
 
 class Player(Entity):
     
-    def __init__(self, pos, projectiles_arr):
-        Entity.__init__(self, pos, projectiles_arr, radius=25)
+    def __init__(self, pos):
+        Entity.__init__(self, pos, radius=25)
         self.frozen = False
         self.knock_back_speed = 30
         self.frozen_friction = 0.65
@@ -112,16 +111,15 @@ class Enemy(Entity):
 
 class Projectile(Entity):
 
-    def __init__(self, pos, projectile_arr, parent, direction, radius=8):
-        Entity.__init__(self, pos, projectile_arr, radius=8, direction=direction)
+    def __init__(self, pos, parent, direction, radius=8):
+        Entity.__init__(self, pos, radius=8, direction=direction)
         self.damage = 10
         self.parent = parent
         self.speed = 15
-        self.projectile_arr = projectile_arr
-        self.projectile_arr.append(self)
+        game_singleton.game.projectiles.append(self)
 
     def on_collision(self, other_colliding_obj):
-        self.projectile_arr.remove(self)
+        game_singleton.game.projectiles.remove(self)
 
     def draw(self):
         fill(0, 255, 0)

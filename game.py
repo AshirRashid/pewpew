@@ -12,7 +12,7 @@ class Game:
         self.pressed_keys = set()
         self.start, self.end = PVector(10, 10), PVector(self.RES.x - 10, self.RES.y - 10) # map boundary
         self.projectiles = []
-        self.player = Player(PVector(self.RES.x/2, self.RES.y/2), self.projectiles)
+        self.player = Player(PVector(self.RES.x/2, self.RES.y/2))
         self.entities = [
             # Enemy(PVector(100, 100), self.projectiles, 50),
             # Enemy(PVector(200, 200), self.projectiles, 50)
