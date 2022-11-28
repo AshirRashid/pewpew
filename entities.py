@@ -86,8 +86,7 @@ class Player(Entity):
         if self.is_ready_to_shoot:
             Entity.shoot(self, projectile_direction)
             self.is_ready_to_shoot = False
-            def __():
-                self.is_ready_to_shoot = True
+            def __(): self.is_ready_to_shoot = True
             game_singleton.game.create_timer(0.1, __)
 
     def process(self):
@@ -106,25 +105,34 @@ class Player(Entity):
 
 class Enemy(Entity):
 
+    enemies = []
+    def __init__(self, pos, radius=10, direction=PVector(1, 0)):
+        Entity.__init__(self, pos, radius, direction)
+        Enemy.enemies.append(self)
+
     def draw(self):
         fill(255, 0, 0)
         circle(self.pos.x, self.pos.y, self.radius*2)
 
     def on_collision(self, other_colliding_obj):
-        pass
+        if other_colliding_obj is Projectile:
+            self.health -= other_colliding_obj.damage
+            if self.health <= 0:
+                Enemy.enemies.remove(self)
 
 
 class Projectile(Entity):
 
+    projectiles = []
     def __init__(self, pos, parent, direction, radius=8):
         Entity.__init__(self, pos, radius=8, direction=direction)
         self.damage = 10
         self.parent = parent
         self.speed = 15
-        game_singleton.game.projectiles.append(self)
+        Projectile.projectiles.append(self)
 
     def on_collision(self, other_colliding_obj):
-        game_singleton.game.projectiles.remove(self)
+        Projectile.projectiles.remove(self)
 
     def draw(self):
         fill(0, 255, 0)
@@ -138,4 +146,4 @@ class Projectile(Entity):
                 or self.pos.y < 0
                 or self.pos.y > game_singleton.game.RES.y
         ):
-            game_singleton.game.projectiles.remove(self)
+            Projectile.projectiles.remove(self)

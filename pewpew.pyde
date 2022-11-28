@@ -11,6 +11,7 @@ game_singleton.game = Game()
 def setup():
     size(int(game_singleton.game.RES.x), int(game_singleton.game.RES.y))
     background(255)
+    game_singleton.game.setup()
 
 def draw():
     background(255)
