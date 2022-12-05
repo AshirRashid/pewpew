@@ -19,7 +19,13 @@ def draw():
     game_singleton.game.draw()
 
 def keyPressed():
-    game_singleton.game.pressed_keys.add(keyCode)
+    game_singleton.game.inputs.add(keyCode)
 
 def keyReleased():
-    game_singleton.game.pressed_keys.discard(keyCode)
+    game_singleton.game.inputs.discard(keyCode)
+
+def mousePressed():
+    game_singleton.game.inputs.add(game_singleton.game.MOUSE)
+
+def mouseReleased():
+    game_singleton.game.inputs.remove(game_singleton.game.MOUSE)
