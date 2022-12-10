@@ -1,50 +1,80 @@
-from entities import Enemy, Player, Projectile, ShootingEnemy
+from entities import Enemy, Player, Projectile, ShootingEnemy, Pickup
+from ui import MainMenu, WinMenu, LostMenu
 from time import time
 from copy import copy
+import config
 
 
 class Game:
 
     def __init__(self):
-        self.SPACE = 32 # ASCII code for space
-        self.MOUSE = -1
-        self.RES = PVector(800, 800)
-        self.TILE_NUM = PVector(20, 20)
-        self.TILE_RES = PVector(self.RES.x//self.TILE_NUM.x, self.RES.y//self.TILE_NUM.y)
-
+        self.main_menu = MainMenu()
+        self.win_menu = WinMenu()
+        self.lost_menu = LostMenu()
         # _state = "playing" | "paused" | "won" | "lost" | "main_menu"
-        self._state = "playing"
+        self._state = "main_menu"
         self.timer_manager = TimerManager()
         self.inputs = set()
-        self.start, self.end = PVector(10, 10), PVector(self.RES.x - 10, self.RES.y - 10) # map boundary
-        self.player = Player(PVector(self.RES.x/2, self.RES.y/2))
+        self.start, self.end = PVector(10, 10), PVector(config.RES.x - 10, config.RES.y - 10) # map boundary
+        self.on_unpause_callbacks = []
+        self.display_text = "3"
 
-    def resume(self): self._state = "playing"
+    def start_game(self):
+        self.pause()
+        self.setup()
+        self.display_text = "3"
+        def countdown_0():
+            self.display_text = "0"
+            self.resume()
+        def countdown_1():
+            self.display_text = "1"
+            self.create_timer(1, countdown_0)
+        def countdown_2():
+            self.display_text = "2"
+            self.create_timer(1, countdown_1)
+        self.create_timer(1, countdown_2)
+
+    def resume(self):
+        self._state = "playing"
+        for callback in self.on_unpause_callbacks:
+            callback()
 
     def pause(self): self._state = "paused"
 
-    def setup(self):
-        # Enemy(PVector(500, 100))
-        # ShootingEnemy(PVector(100, 100), motion_type="static", shooting_type="radial")
-        # ShootingEnemy(PVector(500, 500), motion_type="static", shooting_type="shotgun")
+    def is_paused(self): return self._state == "paused"
 
-        # One Level
+    def setup(self):
+        Projectile.projectiles = set()
+        Enemy.enemies = set()
+        self.player = Player(PVector(config.RES.x/2, config.RES.y/2))
+        # Level 1
+        Enemy(PVector(500, 100))
+        Pickup(PVector(100, 100))
+        ShootingEnemy(PVector(400, 200), motion_type="static", shooting_type="radial")
+        ShootingEnemy(PVector(500, 500), motion_type="static", shooting_type="shotgun")
+
+        # Level 2
         # ShootingEnemy(PVector(100, 100), motion_type="static", shooting_type="radial")
         # ShootingEnemy(PVector(700, 100), motion_type="static", shooting_type="radial")
         # ShootingEnemy(PVector(100, 700), motion_type="static", shooting_type="radial")
-        ShootingEnemy(PVector(700, 700), motion_type="static", shooting_type="radial")
+        # ShootingEnemy(PVector(700, 700), motion_type="static", shooting_type="radial")
 
     def process(self):
+        self.process_input()
+        self.timer_manager.process_timers()
         if self._state == "playing":
-            self.timer_manager.process_timers()
-            self.player.process_input(self.inputs)
+            self.check_win()
             self.player.process()
-
             for projectile in Projectile.projectiles:
                 projectile.process()
                 if self.player.check_collision(projectile):
                     self.player.on_collision(projectile)
                     projectile.on_collision(self.player)
+            for pickup in Pickup.pickups:
+                pickup.process()
+                if self.player.check_collision(pickup):
+                    self.player.on_collision(pickup)
+                    pickup.on_collision(self.player)
             for entity in Enemy.enemies:
                 entity.process()
                 for projectile in Projectile.projectiles:
@@ -58,11 +88,24 @@ class Game:
             pass
 
     def draw(self):
-        self.player.draw()
-        for entity in Enemy.enemies:
-            entity.draw()
-        for projectile in Projectile.projectiles:
-            projectile.draw()
+        if self._state == "main_menu":
+            self.main_menu.draw()
+        elif self._state == "won":
+            self.win_menu.draw()
+        elif self._state == "lost":
+            self.lost_menu.draw()
+        elif self._state in ("playing", "paused"):
+            self.player.draw()
+            for entity in Enemy.enemies:
+                entity.draw()
+            for projectile in Projectile.projectiles:
+                projectile.draw()
+            for pickup in Pickup.pickups:
+                pickup.draw()
+            fill(0)
+            textSize(30)
+            textAlign(CENTER, TOP)
+            text(self.display_text, config.RES.x/2, 0)
 
     def spawn_obj_by_class(self, obj_type):
         """Simple object factory"""
@@ -78,6 +121,24 @@ class Game:
 
     def create_timer(self, time_in_s, callback):
         self.timer_manager.add_timer(time_in_s, callback)
+
+    def process_input(self):
+        if self._state == "main_menu":
+            self.main_menu.process_input(self.inputs)
+        elif self._state == "playing":
+            self.player.process_input(self.inputs)
+        elif self._state == "won":
+            self.win_menu.process_input(self.inputs)
+        elif self._state == "lost":
+            self.lost_menu.process_input(self.inputs)
+
+    def check_win(self):
+        if len(Enemy.enemies) == 0:
+            self._state = "won"
+
+    def on_player_lost(self): self._state = "lost"
+
+    def go_to_main_menu(self): self._state = "main_menu"
 
 
 class TimerManager:
