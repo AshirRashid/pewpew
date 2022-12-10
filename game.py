@@ -50,6 +50,7 @@ class Game:
         # Level 1
         Enemy(PVector(500, 100))
         Pickup(PVector(100, 100))
+        Pickup(PVector(100, 500), "damage")
         ShootingEnemy(PVector(400, 200), motion_type="static", shooting_type="radial")
         ShootingEnemy(PVector(500, 500), motion_type="static", shooting_type="shotgun")
 

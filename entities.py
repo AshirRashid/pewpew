@@ -13,6 +13,7 @@ class Entity:
         self.speed = speed
         self.direction = direction
 
+        self._damage = 5
         self._init_health = self.health
         self._vel = PVector(0, 0)
         self._prev_non_zero_direction = direction
@@ -64,10 +65,12 @@ class Entity:
             projectile_pos,
             self,
             projectile_direction,
+            damage=self._damage
         )
 
 class Player(Entity):
-    
+
+    enemy_contact_damage = 2
     def __init__(self, pos):
         Entity.__init__(self, pos, radius=20)
         self.frozen = False
@@ -100,12 +103,21 @@ class Player(Entity):
 
     def on_collision(self, other_colliding_obj):
         if isinstance(other_colliding_obj, Enemy):
+            self.health -= Player.enemy_contact_damage
+            if self.health <= 0:
+                game_singleton.game.on_player_lost()
             self._vel = (self.pos - other_colliding_obj.pos).normalize()*self.knock_back_speed
             self.frozen = True
         elif isinstance(other_colliding_obj, Projectile):
             self.health -= other_colliding_obj.damage
             if self.health <= 0:
                 game_singleton.game.on_player_lost()
+        elif isinstance(other_colliding_obj, Pickup):
+            if other_colliding_obj.pickup_type == "health":
+                self.health += Pickup.health_boost
+                self.health = min(self.health, self._init_health)
+            if other_colliding_obj.pickup_type == "damage":
+                self._damage += Pickup.damage_boost
 
     def shoot(self, projectile_direction=None):
         if self.is_ready_to_shoot:
@@ -198,9 +210,9 @@ class Projectile(Entity):
 
     projectiles = set()
     radius = 5
-    def __init__(self, pos, parent, direction):
+    def __init__(self, pos, parent, direction, damage=5):
         Entity.__init__(self, pos, radius=Projectile.radius, direction=direction, speed=15)
-        self.damage = 5
+        self.damage = damage
         self.parent = parent
         Projectile.projectiles.add(self)
 
@@ -219,14 +231,21 @@ class Projectile(Entity):
 class Pickup(Entity):
 
     pickups = set()
-    def __init__(self, pos, radius=15, direction=PVector(1, 0)):
-        Entity.__init__(self, pos, radius, direction)
-        self.speed = 0
+    health_boost = 3
+    damage_boost = 2
+    def __init__(self, pos, pickup_type="health"):
+        """pickup_type = "health" | "damage" """
+        self.pickup_type = pickup_type
+        Entity.__init__(self, pos, radius=15)
         Pickup.pickups.add(self)
 
     def draw(self):
         stroke(0)
-        fill(255, 255, 0)
+        if self.pickup_type == "health":
+            fill(255, 255, 0)
+        elif self.pickup_type == "damage":
+            fill(255, 0, 255)
+        else: raise NotImplementedError()
         circle(self.pos.x, self.pos.y, self.radius*2)
 
     def on_collision(self, other_colliding_obj):
