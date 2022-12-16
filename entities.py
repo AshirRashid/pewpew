@@ -144,9 +144,8 @@ class Player(Entity):
 class Enemy(Entity):
 
     enemies = set()
-    def __init__(self, pos, radius=20, direction=PVector(1, 0)):
-        Entity.__init__(self, pos, radius, direction)
-        self.speed = 3
+    def __init__(self, pos, radius=20, direction=PVector(1, 0), speed=3):
+        Entity.__init__(self, pos, radius, direction, speed=speed)
         Enemy.enemies.add(self)
 
     def draw(self):
@@ -168,6 +167,38 @@ class Enemy(Entity):
                 Enemy.enemies.discard(self)
 
 
+class ObstacleEnemy(Enemy):
+
+    def __init__(self, pos, radius=20):
+        Enemy.__init__(self, pos, speed=0)
+
+    def draw(self):
+        noStroke()
+        fill(100)
+        circle(self.pos.x, self.pos.y, (self.health / self._init_health) * self.radius * 2)
+        stroke(0)
+        noFill()
+        circle(self.pos.x, self.pos.y, self.radius*2)
+
+
+class SpawnerEnemy(Enemy):
+
+    def __init__(self, pos):
+        Enemy.__init__(self, pos, 50, speed=0)
+        if game_singleton.game.is_paused():
+            game_singleton.game.on_unpause_callbacks.append(self.create_spawn_timer)
+        else:
+            self.create_spawn_timer()
+
+    def create_spawn_timer(self):
+        game_singleton.game.create_timer(3, self.on_timer)
+
+    def on_timer(self):
+        if not (self in Enemy.enemies): return
+        Enemy(self.pos)
+        self.create_spawn_timer()
+
+
 class ShootingEnemy(Enemy):
     shotgun_projectile_num = 3
     radial_projectile_num = 5
@@ -182,13 +213,13 @@ class ShootingEnemy(Enemy):
             self.speed = 0
         self.shooting_type = shooting_type
 
-        def create_shooting_timer():
-            game_singleton.game.create_timer(1, self.on_timer)
-
         if game_singleton.game.is_paused():
-            game_singleton.game.on_unpause_callbacks.append(create_shooting_timer)
+            game_singleton.game.on_unpause_callbacks.append(self.create_shooting_timer)
         else:
-            create_shooting_timer()
+            self.create_shooting_timer()
+
+    def create_shooting_timer(self):
+        game_singleton.game.create_timer(1, self.on_timer)
 
     def on_timer(self):
         if not (self in Enemy.enemies): return

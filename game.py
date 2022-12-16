@@ -1,4 +1,4 @@
-from entities import Enemy, Player, Projectile, ShootingEnemy, Pickup
+from entities import Enemy, Player, Projectile, ShootingEnemy, Pickup, SpawnerEnemy, ObstacleEnemy
 from ui import MainMenu, WinMenu, LostMenu
 from time import time
 from copy import copy
@@ -8,7 +8,14 @@ import config
 class Game:
 
     def __init__(self):
-        self.main_menu = MainMenu()
+        self.level_name2function = {
+            "1": self.level_1,
+            "2": self.level_2,
+            "3": self.level_3,
+            "4": self.level_4,
+            "5": self.level_5
+        }
+        self.main_menu = MainMenu(self.level_name2function)
         self.win_menu = WinMenu()
         self.lost_menu = LostMenu()
         # _state = "playing" | "paused" | "won" | "lost" | "main_menu"
@@ -47,18 +54,6 @@ class Game:
         Projectile.projectiles = set()
         Enemy.enemies = set()
         self.player = Player(PVector(config.RES.x/2, config.RES.y/2))
-        # Level 1
-        Enemy(PVector(500, 100))
-        Pickup(PVector(100, 100))
-        Pickup(PVector(100, 500), "damage")
-        ShootingEnemy(PVector(400, 200), motion_type="static", shooting_type="radial")
-        ShootingEnemy(PVector(500, 500), motion_type="static", shooting_type="shotgun")
-
-        # Level 2
-        # ShootingEnemy(PVector(100, 100), motion_type="static", shooting_type="radial")
-        # ShootingEnemy(PVector(700, 100), motion_type="static", shooting_type="radial")
-        # ShootingEnemy(PVector(100, 700), motion_type="static", shooting_type="radial")
-        # ShootingEnemy(PVector(700, 700), motion_type="static", shooting_type="radial")
 
     def process(self):
         self.process_input()
@@ -140,6 +135,51 @@ class Game:
     def on_player_lost(self): self._state = "lost"
 
     def go_to_main_menu(self): self._state = "main_menu"
+
+    def level_2(self):
+        self.start_game()
+        Enemy(PVector(500, 100))
+        Pickup(PVector(100, 100))
+        Pickup(PVector(100, 500), "damage")
+        ObstacleEnemy(PVector(400, 200))
+        SpawnerEnemy(PVector(200, 600))
+        ShootingEnemy(PVector(500, 500), motion_type="static", shooting_type="shotgun")
+
+    def level_3(self):
+        self.start_game()
+        ShootingEnemy(PVector(100, 100), motion_type="static", shooting_type="radial")
+        ShootingEnemy(PVector(700, 100), motion_type="static", shooting_type="radial")
+        ShootingEnemy(PVector(100, 700), motion_type="static", shooting_type="radial")
+        ShootingEnemy(PVector(700, 700), motion_type="static", shooting_type="radial")
+
+    def level_4(self):
+        self.start_game()
+        ShootingEnemy(PVector(700, 700), motion_type="static", shooting_type="radial")
+        ShootingEnemy(PVector(100, 100), motion_type="static", shooting_type="radial")
+        SpawnerEnemy(PVector(700, 100))
+        Pickup(PVector(100, 400))
+        ShootingEnemy(PVector(100, 700), motion_type="static", shooting_type="shotgun")
+
+    def level_5(self):
+        self.start_game()
+        ShootingEnemy(PVector(400, 200), motion_type="static", shooting_type="radial")
+        ShootingEnemy(PVector(400, 600), motion_type="static", shooting_type="radial")
+        Pickup(PVector(400, 450), "damage")
+        ShootingEnemy(PVector(100, 700), motion_type="static", shooting_type="shotgun")
+        ShootingEnemy(PVector(100, 100), motion_type="static", shooting_type="shotgun")
+        ShootingEnemy(PVector(700, 100), motion_type="static", shooting_type="shotgun")
+        ShootingEnemy(PVector(700, 700), motion_type="static", shooting_type="shotgun")
+
+    def level_1(self):
+        self.start_game()
+        SpawnerEnemy(PVector(100, 700))
+        SpawnerEnemy(PVector(100, 100))
+        SpawnerEnemy(PVector(700, 700))
+        SpawnerEnemy(PVector(700, 100))
+        ObstacleEnemy(PVector(400, 300))
+        ObstacleEnemy(PVector(400, 500))
+        ObstacleEnemy(PVector(300, 400))
+        ObstacleEnemy(PVector(500, 400))
 
 
 class TimerManager:

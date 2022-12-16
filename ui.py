@@ -15,15 +15,21 @@ class Menu:
 
 
 class MainMenu(Menu):
-    def __init__(self):
-        self.buttons = [Button("PLAY", 4.0/8.0, 5.0/8.0, PVector(200, 100), self.on_play_pressed)]
+    def __init__(self, level_name2function):
+        self.buttons = []
+        total_buttons = len(level_name2function)
+        for idx, (level_name, level_function) in enumerate(level_name2function.items()):
+            self.buttons.append(Button(
+                level_name,
+                float(idx + 1)/float(total_buttons + 1),
+                5.0/8.0,
+                PVector(100, 100),
+                level_function
+            ))
 
     def draw(self):
-        game_singleton.text_helper("PEW PEW", 4.0/8.0, 3.0/8.0, size=70)
         Menu.draw(self)
-
-    def on_play_pressed(self):
-        game_singleton.game.start_game()
+        game_singleton.text_helper("PEW PEW", 4.0/8.0, 3.0/8.0, size=70)
 
 
 class WinMenu(Menu):
@@ -57,7 +63,6 @@ class Button:
 
     def __init__(self, text, center_pos_frac_x, center_pos_frac_y, size, on_pressed):
         self._text = text
-        print(center_pos_frac_x, config.RES.x)
         button_center = PVector(
             center_pos_frac_x*config.RES.x,
             center_pos_frac_y*config.RES.y
@@ -85,6 +90,8 @@ class Button:
             self._size.x - self._inner_rect_delta.x,
             self._size.y
         )
+        print("size", inner_rect_size)
+        print("top-left", inner_rect_top_left)
         rect(
             inner_rect_top_left.x,
             inner_rect_top_left.y,
