@@ -75,6 +75,7 @@ class Button:
 
     def draw(self):
         fill(255)
+        stroke(0)
         rect(
             self._pos.x,
             self._pos.y,

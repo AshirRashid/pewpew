@@ -13,7 +13,7 @@ class Game:
             "2": self.level_2,
             "3": self.level_3,
             "4": self.level_4,
-            "5": self.level_5
+            "5": self.level_5,
         }
         self.main_menu = MainMenu(self.level_name2function)
         self.win_menu = WinMenu()
@@ -53,6 +53,7 @@ class Game:
     def setup(self):
         Projectile.projectiles = set()
         Enemy.enemies = set()
+        Pickup.pickups = set()
         self.player = Player(PVector(config.RES.x/2, config.RES.y/2))
 
     def process(self):
