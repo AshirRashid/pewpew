@@ -1,8 +1,10 @@
-from entities import Enemy, Player, Projectile, ShootingEnemy, Pickup, SpawnerEnemy, ObstacleEnemy
-from ui import MainMenu, WinMenu, LostMenu
-from time import time
 from copy import copy
+from time import time
+
 import config
+from entities import (Enemy, ObstacleEnemy, Pickup, Player, Projectile,
+                      ShootingEnemy, SpawnerEnemy)
+from ui import LostMenu, MainMenu, WinMenu
 
 
 class Game:
@@ -15,6 +17,7 @@ class Game:
             "4": self.level_4,
             "5": self.level_5,
         }
+        # self.sound_player = Minim(this)
         self.main_menu = MainMenu(self.level_name2function)
         self.win_menu = WinMenu()
         self.lost_menu = LostMenu()
@@ -49,6 +52,8 @@ class Game:
     def pause(self): self._state = "paused"
 
     def is_paused(self): return self._state == "paused"
+
+    def is_game_over(self): return self._state in ("won", "lost")
 
     def setup(self):
         Projectile.projectiles = set()
