@@ -1,4 +1,5 @@
-import game_singleton, config
+import config
+import game_singleton
 
 
 class Menu:
@@ -91,8 +92,6 @@ class Button:
             self._size.x - self._inner_rect_delta.x,
             self._size.y
         )
-        print("size", inner_rect_size)
-        print("top-left", inner_rect_top_left)
         rect(
             inner_rect_top_left.x,
             inner_rect_top_left.y,

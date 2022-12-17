@@ -1,7 +1,8 @@
 from math import pi
 from random import randint
 
-import game_singleton, config
+import config
+import game_singleton
 
 
 class Entity:
@@ -103,20 +104,19 @@ class Player(Entity):
 
     def on_collision(self, other_colliding_obj):
         if isinstance(other_colliding_obj, Enemy):
-            config.sound_name2obj["player_hit"].rewind()
-            config.sound_name2obj["player_hit"].play()
+            game_singleton.play_music_by_name("player_hit")
             self.health -= Player.enemy_contact_damage
             if self.health <= 0:
                 game_singleton.game.on_player_lost()
             self._vel = (self.pos - other_colliding_obj.pos).normalize()*self.knock_back_speed
             self.frozen = True
         elif isinstance(other_colliding_obj, Projectile):
-            config.sound_name2obj["player_hit"].rewind()
-            config.sound_name2obj["player_hit"].play()
+            game_singleton.play_music_by_name("player_hit")
             self.health -= other_colliding_obj.damage
             if self.health <= 0:
                 game_singleton.game.on_player_lost()
         elif isinstance(other_colliding_obj, Pickup):
+            game_singleton.play_music_by_name("pickup")
             if other_colliding_obj.pickup_type == "health":
                 self.health += Pickup.health_boost
                 self.health = min(self.health, self._init_health)
@@ -125,8 +125,6 @@ class Player(Entity):
 
     def shoot(self, projectile_direction=None):
         if self.is_ready_to_shoot:
-            # config.sound_name2obj["shoot"].rewind()
-            # config.sound_name2obj["shoot"].play()
             Entity.shoot(self, projectile_direction)
             self.is_ready_to_shoot = False
             def __(): self.is_ready_to_shoot = True
@@ -168,8 +166,7 @@ class Enemy(Entity):
 
     def on_collision(self, other_colliding_obj):
         if isinstance(other_colliding_obj, Projectile):
-            config.sound_name2obj["enemy_hit"].rewind()
-            config.sound_name2obj["enemy_hit"].play()
+            game_singleton.play_music_by_name("enemy_hit")
             self.health -= other_colliding_obj.damage
             if self.health <= 0:
                 Enemy.enemies.discard(self)
@@ -236,12 +233,8 @@ class ShootingEnemy(Enemy):
             self.shoot((game_singleton.game.player.pos - self.pos).normalize(), projectile_type="precise")
         elif self.shooting_type == "shotgun":
             for _ in range(ShootingEnemy.shotgun_projectile_num):
-                # config.sound_name2obj["shotgun"].rewind()
-                # config.sound_name2obj["shotgun"].play()
                 self.shoot((game_singleton.game.player.pos - self.pos).normalize(), projectile_type="imprecise")
         elif self.shooting_type == "radial":
-            # config.sound_name2obj["radial"].rewind()
-            # config.sound_name2obj["radial"].play()
             main_direction = (game_singleton.game.player.pos - self.pos).normalize()
             angle_step = (2*pi)/ShootingEnemy.radial_projectile_num
             for idx in range(ShootingEnemy.radial_projectile_num):

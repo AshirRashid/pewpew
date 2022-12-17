@@ -8,8 +8,8 @@ import game_singleton
 def setup():
     size(int(config.RES.x), int(config.RES.y))
     background(255)
-    config.populate_sound_name2obj(Minim(this).loadFile)
-    config.sound_name2obj["main_music"].loop(-1)
+    game_singleton.populate_sound_name2obj(Minim(this).loadFile)
+    game_singleton.play_music_by_name("main_music", is_loop_infinitely=True)
 
 
 def draw():
