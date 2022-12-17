@@ -1,8 +1,27 @@
+"""
+Classes for the player, and all enemies and pickups
+
+Classes:
+
+    Entity
+    Player(Entity)
+    Enemy(Entity)
+    ObstacleEnemy(Enemy)
+    SpawnerEnemy(Enemy)
+    ShootingEnemy(Enemy)
+    Projectile(Entity)
+    Pickup(Entity)
+
+Functions:
+
+Misc variables:
+
+"""
 from math import pi
 from random import randint
 
-import config
 import game_singleton
+from constants import MOUSE
 
 
 class Entity:
@@ -28,8 +47,8 @@ class Entity:
 
     def keep_bounded(self):
         new_pos = PVector(
-            min(max(self.radius, self.pos.x), config.RES.x - self.radius),
-            min(max(self.radius, self.pos.y), config.RES.y - self.radius)
+            min(max(self.radius, self.pos.x), game_singleton.RES.x - self.radius),
+            min(max(self.radius, self.pos.y), game_singleton.RES.y - self.radius)
         )
         if self.pos != new_pos:
             self.on_boundary_exit()
@@ -98,7 +117,7 @@ class Player(Entity):
                 self.direction.y -= 1
             elif input_keyCode == DOWN:
                 self.direction.y += 1
-            elif input_keyCode == config.MOUSE:
+            elif input_keyCode == MOUSE:
                 self.shoot((PVector(mouseX, mouseY) - self.pos).normalize())
         self.direction.normalize()
 
@@ -191,7 +210,7 @@ class SpawnerEnemy(Enemy):
     def __init__(self, pos):
         Enemy.__init__(self, pos, 50, speed=0)
         if game_singleton.game.is_paused():
-            game_singleton.game.on_unpause_callbacks.append(self.create_spawn_timer)
+            game_singleton.game.subscribe_to_unpause(self.create_spawn_timer)
         else:
             self.create_spawn_timer()
 
@@ -219,7 +238,7 @@ class ShootingEnemy(Enemy):
         self.shooting_type = shooting_type
 
         if game_singleton.game.is_paused():
-            game_singleton.game.on_unpause_callbacks.append(self.create_shooting_timer)
+            game_singleton.game.subscribe_to_unpause(self.create_shooting_timer)
         else:
             self.create_shooting_timer()
 

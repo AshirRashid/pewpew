@@ -1,5 +1,22 @@
-import config
+"""
+Classes for all UI elements
+
+Classes:
+
+    Menu: Encapsulates all data and functionality related to all elements
+        on a certain screen
+    MainMenu(Menu)
+    WinMenu(Menu)
+    LostMenu(Menu)
+    Button
+
+Functions:
+
+Misc variables:
+
+"""
 import game_singleton
+from constants import MOUSE, RES
 
 
 class Menu:
@@ -65,8 +82,8 @@ class Button:
     def __init__(self, text, center_pos_frac_x, center_pos_frac_y, size, on_pressed):
         self._text = text
         button_center = PVector(
-            center_pos_frac_x*config.RES.x,
-            center_pos_frac_y*config.RES.y
+            center_pos_frac_x*RES.x,
+            center_pos_frac_y*RES.y
         )
         self._pos = button_center - size/2.0
         self._size = size
@@ -102,15 +119,15 @@ class Button:
         button_center = inner_rect_top_left + inner_rect_size/2.0
         game_singleton.text_helper(
             self._text,
-            button_center.x/config.RES.x,
-            button_center.y/config.RES.y,
+            button_center.x/RES.x,
+            button_center.y/RES.y,
             size=30
         )
 
     def process_input(self, inputs):
         is_click = False
         for input_keyCode in inputs:
-            if input_keyCode == config.MOUSE:
+            if input_keyCode == MOUSE:
                 is_click = True
         if not is_click and self._is_pressed:
             self._is_pressed = False

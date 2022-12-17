@@ -1,7 +1,20 @@
+"""
+Main Game class
+
+Classes:
+
+    Game: main Game class
+    TimeManager: manages timers (based on the observer pattern)
+
+Functions:
+
+Misc variables:
+
+"""
 from copy import copy
 from time import time
 
-import config
+from constants import RES
 from entities import (Enemy, ObstacleEnemy, Pickup, Player, Projectile,
                       ShootingEnemy, SpawnerEnemy)
 from ui import LostMenu, MainMenu, WinMenu
@@ -17,7 +30,6 @@ class Game:
             "4": self.level_4,
             "5": self.level_5,
         }
-        # self.sound_player = Minim(this)
         self.main_menu = MainMenu(self.level_name2function)
         self.win_menu = WinMenu()
         self.lost_menu = LostMenu()
@@ -25,8 +37,8 @@ class Game:
         self._state = "main_menu"
         self.timer_manager = TimerManager()
         self.inputs = set()
-        self.start, self.end = PVector(10, 10), PVector(config.RES.x - 10, config.RES.y - 10) # map boundary
-        self.on_unpause_callbacks = []
+        self.start, self.end = PVector(10, 10), PVector(RES.x - 10, RES.y - 10) # map boundary
+        self._on_unpause_callbacks = []
         self.display_text = "3"
 
     def start_game(self):
@@ -44,9 +56,12 @@ class Game:
             self.create_timer(1, countdown_1)
         self.create_timer(1, countdown_2)
 
+    def subscribe_to_unpause(self, callback):
+        self._on_unpause_callbacks.append(callback)
+
     def resume(self):
         self._state = "playing"
-        for callback in self.on_unpause_callbacks:
+        for callback in self._on_unpause_callbacks:
             callback()
 
     def pause(self): self._state = "paused"
@@ -59,7 +74,7 @@ class Game:
         Projectile.projectiles = set()
         Enemy.enemies = set()
         Pickup.pickups = set()
-        self.player = Player(PVector(config.RES.x/2, config.RES.y/2))
+        self.player = Player(PVector(RES.x/2, RES.y/2))
 
     def process(self):
         self.process_input()
@@ -107,7 +122,7 @@ class Game:
             fill(0)
             textSize(30)
             textAlign(CENTER, TOP)
-            text(self.display_text, config.RES.x/2, 0)
+            text(self.display_text, RES.x/2, 0)
 
     def spawn_obj_by_class(self, obj_type):
         """Simple object factory"""
