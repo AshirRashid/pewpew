@@ -1,6 +1,3 @@
 .ds_store
-entities$py.class
-weapons$py.class
-game$py.class
-game_singleton$py.class
- 
+*$py.class
+.idea/
